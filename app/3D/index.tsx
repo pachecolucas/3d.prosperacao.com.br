@@ -4,6 +4,7 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { useState } from "react";
 import { MorphShape, MorphMode } from "./Morph";
+import CameraRig from "./CameraRig";
 
 const ELEMENTS = {
   fire: "#FFFF00",
@@ -24,12 +25,13 @@ type Area = {
 
 type ViewKey = "infinity" | "boxes" | "vortex" | "fibonatti";
 
-type View = {
+export type View = {
   key: ViewKey;
   shape: MorphMode;
   areas: Area[];
-  distance: number;
   zoom: number;
+  angleX: number; // vertical tilt (up/down)
+  angleY: number; // horizontal orbit (left/right)
 };
 
 const VIEWS: Record<ViewKey, View> = {
@@ -46,8 +48,9 @@ const VIEWS: Record<ViewKey, View> = {
       { number: 3, x: 0.5, y: -0.5, z: 0, color: ELEMENTS.fire, size: 1, side: "bottom-left" },
       { number: 4, x: 1.5, y: -0.5, z: 0, color: ELEMENTS.air, size: 1, side: "bottom-right" },
     ],
-    distance: 1.1,
-    zoom: 8,
+    zoom: 6,
+    angleX: 0,
+    angleY: Math.PI / 2,
   },
   boxes: {
     key: "boxes",
@@ -62,8 +65,9 @@ const VIEWS: Record<ViewKey, View> = {
       { number: 3, x: 0.5, y: -0.5, z: 0, color: ELEMENTS.fire, size: 1, side: "bottom-left" },
       { number: 4, x: 1.5, y: -0.5, z: 0, color: ELEMENTS.air, size: 1, side: "bottom-right" },
     ],
-    distance: 1.1,
-    zoom: 8,
+    zoom: 6,
+    angleX: 0,
+    angleY: Math.PI / 2,
   },
   vortex: {
     key: "vortex",
@@ -78,8 +82,9 @@ const VIEWS: Record<ViewKey, View> = {
       { number: 3, x: 0.5, y: -0.5, z: -0.5, color: ELEMENTS.air, size: 1.5, side: "top-right" },
       { number: 4, x: -0.5, y: -0.5, z: -0.5, color: ELEMENTS.earth, size: 1.5, side: "top-right" },
     ],
-    distance: 1,
     zoom: 7,
+    angleX: Math.PI / -4,
+    angleY: Math.PI / 4,
   },
   fibonatti: {
     key: "fibonatti",
@@ -94,14 +99,14 @@ const VIEWS: Record<ViewKey, View> = {
       { number: 3, x: 13, y: -6.5, z: 0, color: ELEMENTS.fire, size: 8, side: "bottom-right" },
       { number: 4, x: 6.5, y: -8, z: 0, color: ELEMENTS.air, size: 5, side: "bottom-left" },
     ],
-    distance: 1.05,
-    zoom: 50,
+    zoom: 60,
+    angleX: 0,
+    angleY: Math.PI / 2,
   },
 };
 
 export default function ThreeScene() {
   const [view, setView] = useState<View>(VIEWS.fibonatti);
-  const [mode, setMode] = useState<"square" | "ball" | "pizza">(view.shape);
 
   return (
     <div className="w-screen h-screen">
@@ -112,22 +117,21 @@ export default function ThreeScene() {
           </span>
         ))}
       </div>
-      <div className="p-4 flex gap-4 text-gray-300 justify-center">
-        <button onClick={() => setMode("square")}>Square</button>
-        <button onClick={() => setMode("ball")}>Ball</button>
-        <button onClick={() => setMode("pizza")}>Pizza</button>
-      </div>
-      <Canvas key={view.key} camera={{ position: [0 - view.distance / 2, 0 - view.distance / 2, view.zoom], fov: 30 }}>
+      <Canvas camera={{ position: [0, 0, 12], fov: 30 }}>
+        <CameraRig view={view} />
+        {view.areas.map((a) => (
+          <MorphShape key={a.number} mode={view.shape} position={[a.x, a.y, a.z]} color={a.color} size={a.size} pizzaSide={a.side} />
+        ))}
         {/* background */}
         {/* <color attach="background" args={["#020617"]} /> */}
 
         {/* lights */}
         <ambientLight intensity={0.3} />
         <directionalLight position={[5, 5, 5]} intensity={1} />
-
+        {/* 
         {view.areas.map((a) => (
           <MorphShape key={a.number} mode={view.shape} position={[a.x, a.y, a.z]} color={a.color} size={a.size} pizzaSide={a.side} />
-        ))}
+        ))} */}
 
         <OrbitControls enableDamping />
       </Canvas>

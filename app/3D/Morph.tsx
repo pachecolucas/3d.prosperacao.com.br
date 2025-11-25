@@ -83,32 +83,61 @@ export function MorphShape({ mode, position = [0, 0, 0], color = "#facc15", size
   const squareRef = useRef<THREE.Mesh>(null!);
   const ballRef = useRef<THREE.Mesh>(null!);
   const pizzaRef = useRef<THREE.Mesh>(null!);
+  const groupRef = useRef<THREE.Group>(null!);
 
-  // keep latest mode for useFrame
+  // keep latest mode, position, size in refs (for useFrame)
   const modeRef = useRef<MorphMode>(mode);
+  const targetPosRef = useRef<[number, number, number]>(position);
+  const targetSizeRef = useRef<number>(size);
+
   useEffect(() => {
     modeRef.current = mode;
   }, [mode]);
 
+  useEffect(() => {
+    targetPosRef.current = position;
+  }, [position]);
+
+  useEffect(() => {
+    targetSizeRef.current = size;
+  }, [size]);
+
   const pizzaGeometry = useMemo(() => createUnitPizza(pizzaSide), [pizzaSide]);
 
   useFrame((_, delta) => {
-    const speed = 6;
+    const speed = 2;
     const currentMode = modeRef.current;
 
-    const dampScale = (mesh: THREE.Mesh | null, target: number) => {
+    const dampScaleShape = (mesh: THREE.Mesh | null, target: number) => {
       if (!mesh) return;
       const s = mesh.scale.x;
       mesh.scale.setScalar(THREE.MathUtils.damp(s, target, speed, delta));
     };
 
-    dampScale(squareRef.current, currentMode === "square" ? 1 : 0);
-    dampScale(ballRef.current, currentMode === "ball" ? 1 : 0);
-    dampScale(pizzaRef.current, currentMode === "pizza" ? 1 : 0);
+    dampScaleShape(squareRef.current, currentMode === "square" ? 1 : 0);
+    dampScaleShape(ballRef.current, currentMode === "ball" ? 1 : 0);
+    dampScaleShape(pizzaRef.current, currentMode === "pizza" ? 1 : 0);
+
+    // 🔥 animate group position + size between views
+    if (groupRef.current) {
+      const g = groupRef.current;
+      const [tx, ty, tz] = targetPosRef.current;
+      const ts = targetSizeRef.current;
+
+      const posSpeed = 5;
+
+      g.position.x = THREE.MathUtils.damp(g.position.x, tx, posSpeed, delta);
+      g.position.y = THREE.MathUtils.damp(g.position.y, ty, posSpeed, delta);
+      g.position.z = THREE.MathUtils.damp(g.position.z, tz, posSpeed, delta);
+
+      const currentScale = g.scale.x || 1;
+      const nextScale = THREE.MathUtils.damp(currentScale, ts, posSpeed, delta);
+      g.scale.setScalar(nextScale);
+    }
   });
 
   return (
-    <group position={position} scale={size}>
+    <group ref={groupRef}>
       {/* UNIT CUBE (1×1×1) */}
       <mesh ref={squareRef} scale={1}>
         <boxGeometry args={[1, 1, 1]} />
@@ -116,14 +145,14 @@ export function MorphShape({ mode, position = [0, 0, 0], color = "#facc15", size
         <Edges color="black" />
       </mesh>
 
-      {/* UNIT SPHERE (radius 0.5, fits inside 1×1×1) */}
+      {/* UNIT SPHERE */}
       <mesh ref={ballRef} scale={0}>
         <sphereGeometry args={[0.5, 32, 32]} />
         <meshStandardMaterial color={color} />
         <Edges color="black" />
       </mesh>
 
-      {/* UNIT PIZZA (bbox normalized to 1×1×1) */}
+      {/* UNIT PIZZA */}
       <mesh ref={pizzaRef} scale={0}>
         <primitive object={pizzaGeometry} />
         <meshStandardMaterial color={color} />
