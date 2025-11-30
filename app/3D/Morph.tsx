@@ -2,7 +2,7 @@
 
 import { useRef, useMemo, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Edges } from "@react-three/drei";
+import { Edges, Text, Image, Billboard } from "@react-three/drei";
 import * as THREE from "three";
 
 export type MorphMode = "square" | "ball" | "pizza";
@@ -158,6 +158,13 @@ export function MorphShape({ mode, position = [0, 0, 0], color = "#facc15", size
         <meshStandardMaterial color={color} />
         <Edges color="black" />
       </mesh>
+
+      {/* CONTENT */}
+      <group position={[0, 0, 0.51]}>
+        <Text fontSize={0.5} color={`#FFFFFF`} anchorX="center" anchorY="middle" outlineWidth={0.02} outlineColor="black">
+          8
+        </Text>
+      </group>
     </group>
   );
 }

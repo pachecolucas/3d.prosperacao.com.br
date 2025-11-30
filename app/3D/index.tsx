@@ -2,7 +2,7 @@
 
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { MorphShape, MorphMode } from "./Morph";
 import CameraRig from "./CameraRig";
 
@@ -34,8 +34,8 @@ export type View = {
   angleY: number; // horizontal orbit (left/right)
 };
 
-const VIEWS: Record<ViewKey, View> = {
-  infinity: {
+const VIEWS: View[] = [
+  {
     key: "infinity",
     shape: "pizza",
     areas: [
@@ -52,7 +52,7 @@ const VIEWS: Record<ViewKey, View> = {
     angleX: 0,
     angleY: Math.PI / 2,
   },
-  boxes: {
+  {
     key: "boxes",
     shape: "square",
     areas: [
@@ -69,7 +69,7 @@ const VIEWS: Record<ViewKey, View> = {
     angleX: 0,
     angleY: Math.PI / 2,
   },
-  vortex: {
+  {
     key: "vortex",
     shape: "ball",
     areas: [
@@ -86,7 +86,7 @@ const VIEWS: Record<ViewKey, View> = {
     angleX: Math.PI / -4,
     angleY: Math.PI / 4,
   },
-  fibonatti: {
+  {
     key: "fibonatti",
     shape: "square",
     areas: [
@@ -103,17 +103,37 @@ const VIEWS: Record<ViewKey, View> = {
     angleX: 0,
     angleY: Math.PI / 2,
   },
-};
+];
 
 export default function ThreeScene() {
-  const [view, setView] = useState<View>(VIEWS.fibonatti);
+  const [view, setView] = useState<View>(VIEWS[3]);
+
+  useEffect(() => {
+    const handleKeypress = (event: KeyboardEvent) => {
+      const { key } = event;
+      switch (key) {
+        case "ArrowRight":
+          return;
+        case "ArrowLeft":
+          return;
+        case "ArrowDown":
+          setView(getNextView(view.key));
+          return;
+        case "ArrowUp":
+          setView(getNextView(view.key, true));
+          return;
+      }
+    };
+    window.addEventListener("keydown", handleKeypress);
+    return () => window.removeEventListener("keydown", handleKeypress);
+  }, [view]);
 
   return (
     <div className="w-screen h-screen">
-      <div className="flex gap-2 text-white">
-        {(Object.keys(VIEWS) as ViewKey[]).map((k) => (
-          <span key={k} onClick={() => setView(VIEWS[k])} className={`${k == view.key ? "font-bold" : ""} `}>
-            {k}
+      <div className="flex gap-2 text-white absolute">
+        {VIEWS.map((v) => (
+          <span key={v.key} onClick={() => setView(v)} className={`${v.key == view.key ? "font-bold" : ""} `}>
+            {v.key} OI
           </span>
         ))}
       </div>
@@ -137,4 +157,16 @@ export default function ThreeScene() {
       </Canvas>
     </div>
   );
+}
+
+function getNextView(key: ViewKey, backward = false) {
+  console.log("getNextView", key);
+  const index = VIEWS.findIndex((e) => e.key === key);
+
+  let nextIndex = VIEWS.length > index + 1 ? index + 1 : 0;
+  if (backward) {
+    nextIndex = index - 1 < 0 ? VIEWS.length - 1 : index - 1;
+  }
+
+  return VIEWS[nextIndex];
 }
