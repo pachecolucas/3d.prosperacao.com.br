@@ -2,18 +2,17 @@
 
 import { useRef, useMemo, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Edges, Text, Image, Billboard } from "@react-three/drei";
+import { Edges, Text } from "@react-three/drei";
 import * as THREE from "three";
+import { Area } from ".";
 
 export type MorphMode = "square" | "ball" | "pizza";
 type PizzaSide = "top-left" | "top-right" | "bottom-right" | "bottom-left";
 
 type MorphShapeProps = {
   mode: MorphMode;
-  position?: [number, number, number];
-  color?: string;
-  size?: number; // overall scale
-  pizzaSide?: PizzaSide;
+  area: Area;
+  rotation: [number, number, number]; // 👈 target rotation from view (angleX, angleY, angleZ)
 };
 
 /* ---------------------------------------------
@@ -79,16 +78,22 @@ function getStartAngle(side: PizzaSide) {
 /* ---------------------------------------------
    MorphShape component
 ---------------------------------------------- */
-export function MorphShape({ mode, position = [0, 0, 0], color = "#facc15", size = 1, pizzaSide = "top-left" }: MorphShapeProps) {
+export function MorphShape({ mode, area, rotation }: MorphShapeProps) {
+  const position: [number, number, number] = [area.x, area.y, area.z];
+  const color = area.color;
+  const size = area.size;
+  const pizzaSide = area.side;
+
   const squareRef = useRef<THREE.Mesh>(null!);
   const ballRef = useRef<THREE.Mesh>(null!);
   const pizzaRef = useRef<THREE.Mesh>(null!);
   const groupRef = useRef<THREE.Group>(null!);
 
-  // keep latest mode, position, size in refs (for useFrame)
+  // keep latest mode, position, size, rotation in refs (for useFrame)
   const modeRef = useRef<MorphMode>(mode);
   const targetPosRef = useRef<[number, number, number]>(position);
   const targetSizeRef = useRef<number>(size);
+  const targetRotRef = useRef<[number, number, number]>(rotation);
 
   useEffect(() => {
     modeRef.current = mode;
@@ -102,6 +107,10 @@ export function MorphShape({ mode, position = [0, 0, 0], color = "#facc15", size
     targetSizeRef.current = size;
   }, [size]);
 
+  useEffect(() => {
+    targetRotRef.current = rotation;
+  }, [rotation]);
+
   const pizzaGeometry = useMemo(() => createUnitPizza(pizzaSide), [pizzaSide]);
 
   useFrame((_, delta) => {
@@ -114,25 +123,35 @@ export function MorphShape({ mode, position = [0, 0, 0], color = "#facc15", size
       mesh.scale.setScalar(THREE.MathUtils.damp(s, target, speed, delta));
     };
 
+    // morph between shapes
     dampScaleShape(squareRef.current, currentMode === "square" ? 1 : 0);
     dampScaleShape(ballRef.current, currentMode === "ball" ? 1 : 0);
     dampScaleShape(pizzaRef.current, currentMode === "pizza" ? 1 : 0);
 
-    // 🔥 animate group position + size between views
+    // animate group position, size and rotation between views
     if (groupRef.current) {
       const g = groupRef.current;
       const [tx, ty, tz] = targetPosRef.current;
       const ts = targetSizeRef.current;
+      const [rx, ry, rz] = targetRotRef.current;
 
       const posSpeed = 5;
+      const rotSpeed = 5;
 
+      // position
       g.position.x = THREE.MathUtils.damp(g.position.x, tx, posSpeed, delta);
       g.position.y = THREE.MathUtils.damp(g.position.y, ty, posSpeed, delta);
       g.position.z = THREE.MathUtils.damp(g.position.z, tz, posSpeed, delta);
 
+      // uniform scale
       const currentScale = g.scale.x || 1;
       const nextScale = THREE.MathUtils.damp(currentScale, ts, posSpeed, delta);
       g.scale.setScalar(nextScale);
+
+      // rotation (so faces / numbers align with view angle)
+      g.rotation.x = THREE.MathUtils.damp(g.rotation.x, rx, rotSpeed, delta);
+      g.rotation.y = THREE.MathUtils.damp(g.rotation.y, ry, rotSpeed, delta);
+      g.rotation.z = THREE.MathUtils.damp(g.rotation.z, rz, rotSpeed, delta);
     }
   });
 
@@ -161,8 +180,8 @@ export function MorphShape({ mode, position = [0, 0, 0], color = "#facc15", size
 
       {/* CONTENT */}
       <group position={[0, 0, 0.51]}>
-        <Text fontSize={0.5} color={`#FFFFFF`} anchorX="center" anchorY="middle" outlineWidth={0.02} outlineColor="black">
-          8
+        <Text fontSize={0.5} color="#FFFFFF" anchorX="center" anchorY="middle" outlineWidth={0.02} outlineColor="black">
+          {area.number}
         </Text>
       </group>
     </group>

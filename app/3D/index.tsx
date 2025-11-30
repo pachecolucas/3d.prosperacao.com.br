@@ -13,7 +13,7 @@ const ELEMENTS = {
   earth: "#FF0000",
 };
 
-type Area = {
+export type Area = {
   number: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
   x: number;
   y: number;
@@ -85,6 +85,8 @@ const VIEWS: View[] = [
     zoom: 7,
     angleX: Math.PI / -4,
     angleY: Math.PI / 4,
+    // angleX: 0,
+    // angleY: 0,
   },
   {
     key: "fibonatti",
@@ -106,7 +108,13 @@ const VIEWS: View[] = [
 ];
 
 export default function ThreeScene() {
-  const [view, setView] = useState<View>(VIEWS[3]);
+  const [view, setView] = useState<View>(VIEWS[2]);
+
+  function getShapeRotation(v: View): [number, number, number] {
+    if (v.key != "vortex") return [0, 0, 0];
+    // return [Math.PI / 8, 0, Math.PI / -8];
+    return [Math.PI / 4, Math.PI / 4.5, Math.PI / -5.6];
+  }
 
   useEffect(() => {
     const handleKeypress = (event: KeyboardEvent) => {
@@ -140,7 +148,7 @@ export default function ThreeScene() {
       <Canvas camera={{ position: [0, 0, 12], fov: 30 }}>
         <CameraRig view={view} />
         {view.areas.map((a) => (
-          <MorphShape key={a.number} mode={view.shape} position={[a.x, a.y, a.z]} color={a.color} size={a.size} pizzaSide={a.side} />
+          <MorphShape key={a.number} mode={view.shape} area={a} rotation={getShapeRotation(view)} />
         ))}
         {/* background */}
         {/* <color attach="background" args={["#020617"]} /> */}
