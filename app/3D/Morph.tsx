@@ -12,7 +12,6 @@ type PizzaSide = "top-left" | "top-right" | "bottom-right" | "bottom-left";
 type MorphShapeProps = {
   mode: MorphMode;
   area: Area;
-  rotation: [number, number, number]; // 👈 target rotation from view (angleX, angleY, angleZ)
 };
 
 /* ---------------------------------------------
@@ -78,7 +77,7 @@ function getStartAngle(side: PizzaSide) {
 /* ---------------------------------------------
    MorphShape component
 ---------------------------------------------- */
-export function MorphShape({ mode, area, rotation }: MorphShapeProps) {
+export function MorphShape({ mode, area }: MorphShapeProps) {
   const position: [number, number, number] = [area.x, area.y, area.z];
   const color = area.color;
   const size = area.size;
@@ -93,7 +92,6 @@ export function MorphShape({ mode, area, rotation }: MorphShapeProps) {
   const modeRef = useRef<MorphMode>(mode);
   const targetPosRef = useRef<[number, number, number]>(position);
   const targetSizeRef = useRef<number>(size);
-  const targetRotRef = useRef<[number, number, number]>(rotation);
 
   useEffect(() => {
     modeRef.current = mode;
@@ -106,10 +104,6 @@ export function MorphShape({ mode, area, rotation }: MorphShapeProps) {
   useEffect(() => {
     targetSizeRef.current = size;
   }, [size]);
-
-  useEffect(() => {
-    targetRotRef.current = rotation;
-  }, [rotation]);
 
   const pizzaGeometry = useMemo(() => createUnitPizza(pizzaSide), [pizzaSide]);
 
@@ -133,10 +127,8 @@ export function MorphShape({ mode, area, rotation }: MorphShapeProps) {
       const g = groupRef.current;
       const [tx, ty, tz] = targetPosRef.current;
       const ts = targetSizeRef.current;
-      const [rx, ry, rz] = targetRotRef.current;
 
       const posSpeed = 5;
-      const rotSpeed = 5;
 
       // position
       g.position.x = THREE.MathUtils.damp(g.position.x, tx, posSpeed, delta);
@@ -147,16 +139,11 @@ export function MorphShape({ mode, area, rotation }: MorphShapeProps) {
       const currentScale = g.scale.x || 1;
       const nextScale = THREE.MathUtils.damp(currentScale, ts, posSpeed, delta);
       g.scale.setScalar(nextScale);
-
-      // rotation (so faces / numbers align with view angle)
-      g.rotation.x = THREE.MathUtils.damp(g.rotation.x, rx, rotSpeed, delta);
-      g.rotation.y = THREE.MathUtils.damp(g.rotation.y, ry, rotSpeed, delta);
-      g.rotation.z = THREE.MathUtils.damp(g.rotation.z, rz, rotSpeed, delta);
     }
   });
 
   return (
-    <group ref={groupRef}>
+    <group ref={groupRef} rotateX={Math.PI / 8}>
       {/* UNIT CUBE (1×1×1) */}
       <mesh ref={squareRef} scale={1}>
         <boxGeometry args={[1, 1, 1]} />
@@ -180,7 +167,7 @@ export function MorphShape({ mode, area, rotation }: MorphShapeProps) {
 
       {/* CONTENT */}
       <group position={[0, 0, 0.51]}>
-        <Text fontSize={0.5} color="#FFFFFF" anchorX="center" anchorY="middle" outlineWidth={0.02} outlineColor="black">
+        <Text fontSize={0.3} color="#FFFFFF" anchorX="center" anchorY="middle" outlineWidth={0.01} outlineColor="white">
           {area.number}
         </Text>
       </group>

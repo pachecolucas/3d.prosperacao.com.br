@@ -21,9 +21,10 @@ export type Area = {
   color: string;
   size: number;
   side: "top-left" | "top-right" | "bottom-right" | "bottom-left";
+  rotate?: [number, number, number];
 };
 
-type ViewKey = "infinity" | "boxes" | "vortex" | "fibonatti";
+type ViewKey = "infinity" | "boxes" | "vortex" | "fibonatti" | "fibonatti2";
 
 export type View = {
   key: ViewKey;
@@ -73,24 +74,40 @@ const VIEWS: View[] = [
     key: "vortex",
     shape: "ball",
     areas: [
-      { number: 1, x: 0.5, y: 0.5, z: 0.5, color: ELEMENTS.earth, size: 1.5, side: "top-left" },
-      { number: 2, x: -0.5, y: 0.5, z: 0.5, color: ELEMENTS.air, size: 1.5, side: "top-right" },
-      { number: 5, x: 0.5, y: 0.5, z: -0.5, color: ELEMENTS.water, size: 1.5, side: "top-right" },
-      { number: 6, x: -0.5, y: 0.5, z: -0.5, color: ELEMENTS.fire, size: 1.5, side: "top-right" },
-      { number: 8, x: 0.5, y: -0.5, z: 0.5, color: ELEMENTS.fire, size: 1.5, side: "top-left" },
-      { number: 7, x: -0.5, y: -0.5, z: 0.5, color: ELEMENTS.water, size: 1.5, side: "top-right" },
-      { number: 3, x: 0.5, y: -0.5, z: -0.5, color: ELEMENTS.air, size: 1.5, side: "top-right" },
-      { number: 4, x: -0.5, y: -0.5, z: -0.5, color: ELEMENTS.earth, size: 1.5, side: "top-right" },
+      { number: 1, x: 0.5, y: 0.5, z: 0.5, color: ELEMENTS.earth, size: 1.5, side: "top-left", rotate: [Math.PI / 4, Math.PI / 4, 0] },
+      { number: 2, x: 0.5, y: 0.5, z: -0.5, color: ELEMENTS.water, size: 1.5, side: "top-right", rotate: [Math.PI / 4, Math.PI / 4, 0] },
+      { number: 5, x: -0.5, y: 0.5, z: 0.5, color: ELEMENTS.air, size: 1.5, side: "top-right", rotate: [Math.PI / 4, Math.PI / 4, 0] },
+      { number: 6, x: -0.5, y: 0.5, z: -0.5, color: ELEMENTS.fire, size: 1.5, side: "top-right", rotate: [Math.PI / 4, Math.PI / 4, 0] },
+
+      { number: 3, x: 0.5, y: -0.5, z: 0.5, color: ELEMENTS.fire, size: 1.5, side: "top-right", rotate: [Math.PI / 4, Math.PI / 4, 0] },
+      { number: 4, x: 0.5, y: -0.5, z: -0.5, color: ELEMENTS.air, size: 1.5, side: "top-right", rotate: [Math.PI / 4, Math.PI / 4, 0] },
+      { number: 7, x: -0.5, y: -0.5, z: 0.5, color: ELEMENTS.water, size: 1.5, side: "top-right", rotate: [Math.PI / 4, Math.PI / 4, 0] },
+      { number: 8, x: -0.5, y: -0.5, z: -0.5, color: ELEMENTS.earth, size: 1.5, side: "top-left", rotate: [Math.PI / 4, Math.PI / 4, 0] },
     ],
     zoom: 7,
     angleX: Math.PI / -4,
     angleY: Math.PI / 4,
-    // angleX: 0,
-    // angleY: 0,
   },
   {
     key: "fibonatti",
     shape: "square",
+    areas: [
+      { number: 1, x: -6.5, y: 0, z: 0, color: ELEMENTS.earth, size: 21, side: "top-left" },
+      { number: 2, x: 10.5, y: 4, z: 0, color: ELEMENTS.water, size: 13, side: "top-right" },
+      { number: 5, x: 5.5, y: -4, z: 0, color: ELEMENTS.fire, size: 3, side: "top-left" },
+      { number: 6, x: 8, y: -3.5, z: 0, color: ELEMENTS.air, size: 2, side: "top-right" },
+      { number: 8, x: 7.5, y: -5, z: 0, color: ELEMENTS.earth, size: 1, side: "bottom-left" },
+      { number: 7, x: 8.5, y: -5, z: 0, color: ELEMENTS.water, size: 1, side: "bottom-right" },
+      { number: 3, x: 13, y: -6.5, z: 0, color: ELEMENTS.fire, size: 8, side: "bottom-right" },
+      { number: 4, x: 6.5, y: -8, z: 0, color: ELEMENTS.air, size: 5, side: "bottom-left" },
+    ],
+    zoom: 60,
+    angleX: 0,
+    angleY: Math.PI / 2,
+  },
+  {
+    key: "fibonatti2",
+    shape: "pizza",
     areas: [
       { number: 1, x: -6.5, y: 0, z: 0, color: ELEMENTS.earth, size: 21, side: "top-left" },
       { number: 2, x: 10.5, y: 4, z: 0, color: ELEMENTS.water, size: 13, side: "top-right" },
@@ -111,8 +128,8 @@ export default function ThreeScene() {
   const [view, setView] = useState<View>(VIEWS[2]);
 
   function getShapeRotation(v: View): [number, number, number] {
+    return [0, 0, 0];
     if (v.key != "vortex") return [0, 0, 0];
-    // return [Math.PI / 8, 0, Math.PI / -8];
     return [Math.PI / 4, Math.PI / 4.5, Math.PI / -5.6];
   }
 
@@ -148,7 +165,7 @@ export default function ThreeScene() {
       <Canvas camera={{ position: [0, 0, 12], fov: 30 }}>
         <CameraRig view={view} />
         {view.areas.map((a) => (
-          <MorphShape key={a.number} mode={view.shape} area={a} rotation={getShapeRotation(view)} />
+          <MorphShape key={a.number} mode={view.shape} area={a} />
         ))}
         {/* background */}
         {/* <color attach="background" args={["#020617"]} /> */}
