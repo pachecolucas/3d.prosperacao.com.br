@@ -1,9 +1,7 @@
-"use client";
-
-import { useRef, useMemo, useEffect } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useMemo } from "react";
 import { Edges, Text } from "@react-three/drei";
 import * as THREE from "three";
+import { a, useSpring } from "@react-spring/three";
 import { Area } from ".";
 
 export type MorphMode = "square" | "ball" | "pizza";
@@ -12,14 +10,11 @@ type PizzaSide = "top-left" | "top-right" | "bottom-right" | "bottom-left";
 type MorphShapeProps = {
   mode: MorphMode;
   area: Area;
+  flatZ?: boolean;
 };
 
-/* ---------------------------------------------
-   Make a pizza wedge whose bounding box is
-   exactly 1 × 1 × 1 and centered at (0,0,0)
----------------------------------------------- */
 function createUnitPizza(side: PizzaSide) {
-  const baseRadius = 0.5; // initial guess, we'll normalize later
+  const baseRadius = 0.5;
   const depth = 1;
 
   const start = getStartAngle(side);
@@ -31,32 +26,21 @@ function createUnitPizza(side: PizzaSide) {
   shape.absarc(0, 0, baseRadius, start, end, false);
   shape.lineTo(0, 0);
 
-  const geo = new THREE.ExtrudeGeometry(shape, {
-    depth,
-    bevelEnabled: false,
-  });
+  const geo = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: false });
 
-  // 1) Center the geometry around origin
   geo.computeBoundingBox();
   let box = geo.boundingBox!;
   const cx = (box.max.x + box.min.x) / 2;
   const cy = (box.max.y + box.min.y) / 2;
   const cz = (box.max.z + box.min.z) / 2;
-
   geo.translate(-cx, -cy, -cz);
 
-  // 2) Normalize to 1 × 1 × 1
   geo.computeBoundingBox();
   box = geo.boundingBox!;
   const dx = box.max.x - box.min.x || 1;
   const dy = box.max.y - box.min.y || 1;
   const dz = box.max.z - box.min.z || 1;
-
-  const sx = 1 / dx;
-  const sy = 1 / dy;
-  const sz = 1 / dz;
-
-  geo.scale(sx, sy, sz);
+  geo.scale(1 / dx, 1 / dy, 1 / dz);
 
   return geo;
 }
@@ -74,103 +58,71 @@ function getStartAngle(side: PizzaSide) {
   }
 }
 
-/* ---------------------------------------------
-   MorphShape component
----------------------------------------------- */
-export function MorphShape({ mode, area }: MorphShapeProps) {
-  const position: [number, number, number] = [area.x, area.y, area.z];
-  const color = area.color;
-  const size = area.size;
-  const pizzaSide = area.side;
+export function MorphShape({ mode, area, flatZ }: MorphShapeProps) {
+  const pizzaGeometry = useMemo(() => createUnitPizza(area.side as PizzaSide), [area.side]);
 
-  const squareRef = useRef<THREE.Mesh>(null!);
-  const ballRef = useRef<THREE.Mesh>(null!);
-  const pizzaRef = useRef<THREE.Mesh>(null!);
-  const groupRef = useRef<THREE.Group>(null!);
+  // ----- transform spring (same as before) -----
+  const targetPosition: [number, number, number] = [area.x, area.y, area.z];
+  const targetRotation: [number, number, number] = area.rotate ?? [0, 0, 0];
+  const targetScale: [number, number, number] = mode === "ball" ? [area.size, area.size, area.size] : [area.size, area.size, flatZ ? 1 : area.size];
 
-  // keep latest mode, position, size, rotation in refs (for useFrame)
-  const modeRef = useRef<MorphMode>(mode);
-  const targetPosRef = useRef<[number, number, number]>(position);
-  const targetSizeRef = useRef<number>(size);
-
-  useEffect(() => {
-    modeRef.current = mode;
-  }, [mode]);
-
-  useEffect(() => {
-    targetPosRef.current = position;
-  }, [position]);
-
-  useEffect(() => {
-    targetSizeRef.current = size;
-  }, [size]);
-
-  const pizzaGeometry = useMemo(() => createUnitPizza(pizzaSide), [pizzaSide]);
-
-  useFrame((_, delta) => {
-    const speed = 2;
-    const currentMode = modeRef.current;
-
-    const dampScaleShape = (mesh: THREE.Mesh | null, target: number) => {
-      if (!mesh) return;
-      const s = mesh.scale.x;
-      mesh.scale.setScalar(THREE.MathUtils.damp(s, target, speed, delta));
-    };
-
-    // morph between shapes
-    dampScaleShape(squareRef.current, currentMode === "square" ? 1 : 0);
-    dampScaleShape(ballRef.current, currentMode === "ball" ? 1 : 0);
-    dampScaleShape(pizzaRef.current, currentMode === "pizza" ? 1 : 0);
-
-    // animate group position, size and rotation between views
-    if (groupRef.current) {
-      const g = groupRef.current;
-      const [tx, ty, tz] = targetPosRef.current;
-      const ts = targetSizeRef.current;
-
-      const posSpeed = 5;
-
-      // position
-      g.position.x = THREE.MathUtils.damp(g.position.x, tx, posSpeed, delta);
-      g.position.y = THREE.MathUtils.damp(g.position.y, ty, posSpeed, delta);
-      g.position.z = THREE.MathUtils.damp(g.position.z, tz, posSpeed, delta);
-
-      // uniform scale
-      const currentScale = g.scale.x || 1;
-      const nextScale = THREE.MathUtils.damp(currentScale, ts, posSpeed, delta);
-      g.scale.setScalar(nextScale);
-    }
+  const { position, rotation, scale } = useSpring({
+    position: targetPosition,
+    rotation: targetRotation,
+    scale: targetScale,
+    config: { mass: 1, tension: 170, friction: 20 },
   });
 
+  // ----- shape spring: fade shapes in/out when mode changes -----
+  const { squareOpacity, ballOpacity, pizzaOpacity } = useSpring({
+    squareOpacity: mode === "square" ? 1 : 0,
+    ballOpacity: mode === "ball" ? 1 : 0,
+    pizzaOpacity: mode === "pizza" ? 1 : 0,
+    config: { tension: 170, friction: 26 },
+  });
+
+  // small helper to also shrink hidden shapes a bit
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const scaleFromOpacity = (o: any) => o.to((v: number) => 0.2 + 0.8 * v);
+
+  const color = area.color;
+
   return (
-    <group ref={groupRef} rotateX={Math.PI / 8}>
-      {/* UNIT CUBE (1×1×1) */}
-      <mesh ref={squareRef} scale={1}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color={color} />
-        <Edges color="black" />
-      </mesh>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    <a.group position={position} rotation={rotation as any} scale={scale}>
+      {/* SQUARE */}
+      <a.group scale={scaleFromOpacity(squareOpacity)}>
+        <mesh>
+          <boxGeometry args={[1, 1, 1]} />
+          <a.meshStandardMaterial color={color} transparent opacity={squareOpacity} />
+          <Edges color="black" />
+        </mesh>
+      </a.group>
 
-      {/* UNIT SPHERE */}
-      <mesh ref={ballRef} scale={0}>
-        <sphereGeometry args={[0.5, 32, 32]} />
-        <meshStandardMaterial color={color} />
-        <Edges color="black" />
-      </mesh>
+      {/* BALL */}
+      <a.group scale={scaleFromOpacity(ballOpacity)}>
+        <mesh>
+          <sphereGeometry args={[0.5, 32, 32]} />
+          <a.meshStandardMaterial color={color} transparent opacity={ballOpacity} />
+          <Edges color="black" />
+        </mesh>
+      </a.group>
 
-      {/* UNIT PIZZA */}
-      <mesh ref={pizzaRef} scale={0}>
-        <primitive object={pizzaGeometry} />
-        <meshStandardMaterial color={color} />
-        <Edges color="black" />
-      </mesh>
+      {/* PIZZA */}
+      <a.group scale={scaleFromOpacity(pizzaOpacity)}>
+        <mesh>
+          <primitive object={pizzaGeometry} />
+          <a.meshStandardMaterial color={color} transparent opacity={pizzaOpacity} />
+          <Edges color="black" />
+        </mesh>
+      </a.group>
 
-      {/* CONTENT */}
+      {/* label */}
       <group position={[0, 0, 0.51]}>
         <Text fontSize={0.3} color="#FFFFFF" anchorX="center" anchorY="middle" outlineWidth={0.01} outlineColor="white">
           {area.number}
         </Text>
       </group>
-    </group>
+    </a.group>
   );
 }

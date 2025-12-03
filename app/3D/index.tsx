@@ -24,7 +24,7 @@ export type Area = {
   rotate?: [number, number, number];
 };
 
-type ViewKey = "infinity" | "boxes" | "vortex" | "fibonatti" | "fibonatti2";
+type ViewKey = "infinity" | "boxes" | "vortex" | "fibonacci" | "fibonacci2";
 
 export type View = {
   key: ViewKey;
@@ -71,25 +71,7 @@ const VIEWS: View[] = [
     angleY: Math.PI / 2,
   },
   {
-    key: "vortex",
-    shape: "ball",
-    areas: [
-      { number: 1, x: 0.5, y: 0.5, z: 0.5, color: ELEMENTS.earth, size: 1.5, side: "top-left", rotate: [Math.PI / 4, Math.PI / 4, 0] },
-      { number: 2, x: 0.5, y: 0.5, z: -0.5, color: ELEMENTS.water, size: 1.5, side: "top-right", rotate: [Math.PI / 4, Math.PI / 4, 0] },
-      { number: 5, x: -0.5, y: 0.5, z: 0.5, color: ELEMENTS.air, size: 1.5, side: "top-right", rotate: [Math.PI / 4, Math.PI / 4, 0] },
-      { number: 6, x: -0.5, y: 0.5, z: -0.5, color: ELEMENTS.fire, size: 1.5, side: "top-right", rotate: [Math.PI / 4, Math.PI / 4, 0] },
-
-      { number: 3, x: 0.5, y: -0.5, z: 0.5, color: ELEMENTS.fire, size: 1.5, side: "top-right", rotate: [Math.PI / 4, Math.PI / 4, 0] },
-      { number: 4, x: 0.5, y: -0.5, z: -0.5, color: ELEMENTS.air, size: 1.5, side: "top-right", rotate: [Math.PI / 4, Math.PI / 4, 0] },
-      { number: 7, x: -0.5, y: -0.5, z: 0.5, color: ELEMENTS.water, size: 1.5, side: "top-right", rotate: [Math.PI / 4, Math.PI / 4, 0] },
-      { number: 8, x: -0.5, y: -0.5, z: -0.5, color: ELEMENTS.earth, size: 1.5, side: "top-left", rotate: [Math.PI / 4, Math.PI / 4, 0] },
-    ],
-    zoom: 7,
-    angleX: Math.PI / -4,
-    angleY: Math.PI / 4,
-  },
-  {
-    key: "fibonatti",
+    key: "fibonacci",
     shape: "square",
     areas: [
       { number: 1, x: -6.5, y: 0, z: 0, color: ELEMENTS.earth, size: 21, side: "top-left" },
@@ -106,7 +88,7 @@ const VIEWS: View[] = [
     angleY: Math.PI / 2,
   },
   {
-    key: "fibonatti2",
+    key: "fibonacci2",
     shape: "pizza",
     areas: [
       { number: 1, x: -6.5, y: 0, z: 0, color: ELEMENTS.earth, size: 21, side: "top-left" },
@@ -121,6 +103,24 @@ const VIEWS: View[] = [
     zoom: 60,
     angleX: 0,
     angleY: Math.PI / 2,
+  },
+  {
+    key: "vortex",
+    shape: "ball",
+    areas: [
+      { number: 1, x: 0.5, y: 0.5, z: 0.5, color: ELEMENTS.earth, size: 1.5, side: "top-left", rotate: [Math.PI / 8, Math.PI / 4, -Math.PI / 12] },
+      { number: 2, x: 0.5, y: 0.5, z: -0.5, color: ELEMENTS.water, size: 1.5, side: "top-right", rotate: [Math.PI / 3, Math.PI / 2.7, -Math.PI / 4] },
+      { number: 5, x: -0.5, y: 0.5, z: 0.5, color: ELEMENTS.air, size: 1.5, side: "top-right", rotate: [Math.PI / 8, Math.PI / 8, -Math.PI / 8] },
+      { number: 6, x: -0.5, y: 0.5, z: -0.5, color: ELEMENTS.fire, size: 1.5, side: "top-right", rotate: [Math.PI * 1.2, -Math.PI / 4, Math.PI * 1.15] },
+
+      { number: 3, x: 0.5, y: -0.5, z: 0.5, color: ELEMENTS.fire, size: 1.5, side: "top-right", rotate: [Math.PI / 4, Math.PI / 5, -Math.PI / 6] },
+      { number: 4, x: 0.5, y: -0.5, z: -0.5, color: ELEMENTS.air, size: 1.5, side: "top-right", rotate: [Math.PI / 2.3, Math.PI / 5, -Math.PI / 3.5] },
+      { number: 7, x: -0.5, y: -0.5, z: 0.5, color: ELEMENTS.water, size: 1.5, side: "top-right", rotate: [Math.PI / 3.7, Math.PI / 20, -Math.PI / 6] },
+      { number: 8, x: -0.5, y: -0.5, z: -0.5, color: ELEMENTS.earth, size: 1.5, side: "top-left", rotate: [Math.PI / 2.5, Math.PI / 10, -Math.PI / 4] },
+    ],
+    zoom: 7,
+    angleX: Math.PI / -4,
+    angleY: Math.PI / 4,
   },
 ];
 
@@ -155,17 +155,17 @@ export default function ThreeScene() {
 
   return (
     <div className="w-screen h-screen">
-      <div className="flex gap-2 text-white absolute">
+      <div className="flex gap-2 text-white absolute text-xs justify-center w-full p-1">
         {VIEWS.map((v) => (
-          <span key={v.key} onClick={() => setView(v)} className={`${v.key == view.key ? "font-bold" : ""} `}>
-            {v.key} OI
+          <span key={v.key} onClick={() => setView(v)} className={`${v.key == view.key ? "font-bold opacity-50" : "opacity-25"} `}>
+            {v.key}
           </span>
         ))}
       </div>
       <Canvas camera={{ position: [0, 0, 12], fov: 30 }}>
         <CameraRig view={view} />
         {view.areas.map((a) => (
-          <MorphShape key={a.number} mode={view.shape} area={a} />
+          <MorphShape key={a.number} mode={view.shape} area={a} flatZ={view.key === "fibonacci" || view.key === "fibonacci2"} />
         ))}
         {/* background */}
         {/* <color attach="background" args={["#020617"]} /> */}
