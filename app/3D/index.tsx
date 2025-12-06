@@ -25,6 +25,7 @@ export type Area = {
 };
 
 type ViewKey = "infinity" | "boxes" | "vortex" | "fibonacci" | "fibonacci2";
+type ContentKey = "number" | "favicon" | "logo" | "sign" | "planet";
 
 export type View = {
   key: ViewKey;
@@ -35,6 +36,20 @@ export type View = {
   angleY: number; // horizontal orbit (left/right)
 };
 
+export type Content = {
+  key: ContentKey;
+  values: {
+    text?: string;
+    img?: string;
+  }[];
+};
+
+const CONTENTS: Content[] = [
+  { key: "number", values: [{ text: "1" }, { text: "2" }, { text: "3" }, { text: "4" }, { text: "5" }, { text: "6" }, { text: "7" }, { text: "8" }] },
+  { key: "planet", values: [{ text: "♂" }, { text: "☾" }, { text: "☿" }, { text: "♄" }, { text: "♃" }, { text: "♆" }, { text: "☉" }, { text: "♀" }] },
+  { key: "sign", values: [{ text: "♈️" }, { text: "♋️" }, { text: "♊️" }, { text: "♑️" }, { text: "♐️" }, { text: "♓️" }, { text: "♌️" }, { text: "♉️" }] },
+];
+
 const VIEWS: View[] = [
   {
     key: "infinity",
@@ -42,8 +57,8 @@ const VIEWS: View[] = [
     areas: [
       { number: 1, x: -1.5, y: 0.5, z: 0, color: ELEMENTS.earth, size: 1, side: "top-left" },
       { number: 2, x: -0.5, y: 0.5, z: 0, color: ELEMENTS.water, size: 1, side: "top-right" },
-      { number: 5, x: 0.5, y: 0.5, z: 0, color: ELEMENTS.fire, size: 1, side: "top-left" },
-      { number: 6, x: 1.5, y: 0.5, z: 0, color: ELEMENTS.air, size: 1, side: "top-right" },
+      { number: 5, x: 1.5, y: 0.5, z: 0, color: ELEMENTS.air, size: 1, side: "top-right" },
+      { number: 6, x: 0.5, y: 0.5, z: 0, color: ELEMENTS.fire, size: 1, side: "top-left" },
       { number: 8, x: -1.5, y: -0.5, z: 0, color: ELEMENTS.earth, size: 1, side: "bottom-left" },
       { number: 7, x: -0.5, y: -0.5, z: 0, color: ELEMENTS.water, size: 1, side: "bottom-right" },
       { number: 3, x: 0.5, y: -0.5, z: 0, color: ELEMENTS.fire, size: 1, side: "bottom-left" },
@@ -59,8 +74,8 @@ const VIEWS: View[] = [
     areas: [
       { number: 1, x: -1.5, y: 0.5, z: 0, color: ELEMENTS.earth, size: 1, side: "top-left" },
       { number: 2, x: -0.5, y: 0.5, z: 0, color: ELEMENTS.water, size: 1, side: "top-right" },
-      { number: 5, x: 0.5, y: 0.5, z: 0, color: ELEMENTS.fire, size: 1, side: "top-left" },
-      { number: 6, x: 1.5, y: 0.5, z: 0, color: ELEMENTS.air, size: 1, side: "top-right" },
+      { number: 5, x: 1.5, y: 0.5, z: 0, color: ELEMENTS.air, size: 1, side: "top-right" },
+      { number: 6, x: 0.5, y: 0.5, z: 0, color: ELEMENTS.fire, size: 1, side: "top-left" },
       { number: 8, x: -1.5, y: -0.5, z: 0, color: ELEMENTS.earth, size: 1, side: "bottom-left" },
       { number: 7, x: -0.5, y: -0.5, z: 0, color: ELEMENTS.water, size: 1, side: "bottom-right" },
       { number: 3, x: 0.5, y: -0.5, z: 0, color: ELEMENTS.fire, size: 1, side: "bottom-left" },
@@ -76,8 +91,8 @@ const VIEWS: View[] = [
     areas: [
       { number: 1, x: -6.5, y: 0, z: 0, color: ELEMENTS.earth, size: 21, side: "top-left" },
       { number: 2, x: 10.5, y: 4, z: 0, color: ELEMENTS.water, size: 13, side: "top-right" },
-      { number: 5, x: 5.5, y: -4, z: 0, color: ELEMENTS.fire, size: 3, side: "top-left" },
-      { number: 6, x: 8, y: -3.5, z: 0, color: ELEMENTS.air, size: 2, side: "top-right" },
+      { number: 5, x: 5.5, y: -4, z: 0, color: ELEMENTS.air, size: 3, side: "top-left" },
+      { number: 6, x: 8, y: -3.5, z: 0, color: ELEMENTS.fire, size: 2, side: "top-right" },
       { number: 8, x: 7.5, y: -5, z: 0, color: ELEMENTS.earth, size: 1, side: "bottom-left" },
       { number: 7, x: 8.5, y: -5, z: 0, color: ELEMENTS.water, size: 1, side: "bottom-right" },
       { number: 3, x: 13, y: -6.5, z: 0, color: ELEMENTS.fire, size: 8, side: "bottom-right" },
@@ -93,8 +108,8 @@ const VIEWS: View[] = [
     areas: [
       { number: 1, x: -6.5, y: 0, z: 0, color: ELEMENTS.earth, size: 21, side: "top-left" },
       { number: 2, x: 10.5, y: 4, z: 0, color: ELEMENTS.water, size: 13, side: "top-right" },
-      { number: 5, x: 5.5, y: -4, z: 0, color: ELEMENTS.fire, size: 3, side: "top-left" },
-      { number: 6, x: 8, y: -3.5, z: 0, color: ELEMENTS.air, size: 2, side: "top-right" },
+      { number: 5, x: 5.5, y: -4, z: 0, color: ELEMENTS.air, size: 3, side: "top-left" },
+      { number: 6, x: 8, y: -3.5, z: 0, color: ELEMENTS.fire, size: 2, side: "top-right" },
       { number: 8, x: 7.5, y: -5, z: 0, color: ELEMENTS.earth, size: 1, side: "bottom-left" },
       { number: 7, x: 8.5, y: -5, z: 0, color: ELEMENTS.water, size: 1, side: "bottom-right" },
       { number: 3, x: 13, y: -6.5, z: 0, color: ELEMENTS.fire, size: 8, side: "bottom-right" },
@@ -126,20 +141,17 @@ const VIEWS: View[] = [
 
 export default function ThreeScene() {
   const [view, setView] = useState<View>(VIEWS[2]);
-
-  function getShapeRotation(v: View): [number, number, number] {
-    return [0, 0, 0];
-    if (v.key != "vortex") return [0, 0, 0];
-    return [Math.PI / 4, Math.PI / 4.5, Math.PI / -5.6];
-  }
+  const [content, setContent] = useState<Content>(CONTENTS[0]);
 
   useEffect(() => {
     const handleKeypress = (event: KeyboardEvent) => {
       const { key } = event;
       switch (key) {
         case "ArrowRight":
+          setContent(getNextContent(content.key));
           return;
         case "ArrowLeft":
+          setContent(getNextContent(content.key, true));
           return;
         case "ArrowDown":
           setView(getNextView(view.key));
@@ -151,32 +163,34 @@ export default function ThreeScene() {
     };
     window.addEventListener("keydown", handleKeypress);
     return () => window.removeEventListener("keydown", handleKeypress);
-  }, [view]);
+  }, [view, content]);
 
   return (
     <div className="w-screen h-screen">
-      <div className="flex gap-2 text-white absolute text-xs justify-center w-full p-1">
+      <div className="flex gap-2 text-white absolute text-xs justify-center w-full p-1 z-10">
         {VIEWS.map((v) => (
-          <span key={v.key} onClick={() => setView(v)} className={`${v.key == view.key ? "font-bold opacity-50" : "opacity-25"} `}>
+          <div key={v.key} onClick={() => setView(v)} className={`border px-4 p-2 cursor-pointer ${v.key == view.key ? "font-bold opacity-35" : "opacity-15"} `}>
             {v.key}
-          </span>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex gap-2 text-white fixed bottom-0 text-xs justify-center w-full p-1 z-10">
+        {CONTENTS.map((c) => (
+          <div key={c.key} onClick={() => setContent(c)} className={`border px-4 p-2 cursor-pointer ${c.key == content.key ? "font-bold opacity-35" : "opacity-15"} `}>
+            {c.key}
+          </div>
         ))}
       </div>
       <Canvas camera={{ position: [0, 0, 12], fov: 30 }}>
         <CameraRig view={view} />
         {view.areas.map((a) => (
-          <MorphShape key={a.number} mode={view.shape} area={a} flatZ={view.key === "fibonacci" || view.key === "fibonacci2"} />
+          <MorphShape key={a.number} content={content} mode={view.shape} area={a} flatZ={view.key === "fibonacci" || view.key === "fibonacci2"} />
         ))}
-        {/* background */}
-        {/* <color attach="background" args={["#020617"]} /> */}
 
         {/* lights */}
         <ambientLight intensity={0.3} />
         <directionalLight position={[5, 5, 5]} intensity={1} />
-        {/* 
-        {view.areas.map((a) => (
-          <MorphShape key={a.number} mode={view.shape} position={[a.x, a.y, a.z]} color={a.color} size={a.size} pizzaSide={a.side} />
-        ))} */}
 
         <OrbitControls enableDamping />
       </Canvas>
@@ -194,4 +208,16 @@ function getNextView(key: ViewKey, backward = false) {
   }
 
   return VIEWS[nextIndex];
+}
+
+function getNextContent(key: ContentKey, backward = false) {
+  console.log("getNextView", key);
+  const index = CONTENTS.findIndex((e) => e.key === key);
+
+  let nextIndex = CONTENTS.length > index + 1 ? index + 1 : 0;
+  if (backward) {
+    nextIndex = index - 1 < 0 ? CONTENTS.length - 1 : index - 1;
+  }
+
+  return CONTENTS[nextIndex];
 }

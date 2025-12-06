@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { Edges, Text } from "@react-three/drei";
 import * as THREE from "three";
 import { a, useSpring } from "@react-spring/three";
-import { Area } from ".";
+import { Area, Content } from ".";
 
 export type MorphMode = "square" | "ball" | "pizza";
 type PizzaSide = "top-left" | "top-right" | "bottom-right" | "bottom-left";
@@ -10,6 +10,7 @@ type PizzaSide = "top-left" | "top-right" | "bottom-right" | "bottom-left";
 type MorphShapeProps = {
   mode: MorphMode;
   area: Area;
+  content: Content;
   flatZ?: boolean;
 };
 
@@ -58,8 +59,9 @@ function getStartAngle(side: PizzaSide) {
   }
 }
 
-export function MorphShape({ mode, area, flatZ }: MorphShapeProps) {
+export function MorphShape({ mode, area, content, flatZ }: MorphShapeProps) {
   const pizzaGeometry = useMemo(() => createUnitPizza(area.side as PizzaSide), [area.side]);
+  const text = content.values[area.number - 1].text;
 
   // ----- transform spring (same as before) -----
   const targetPosition: [number, number, number] = [area.x, area.y, area.z];
@@ -91,36 +93,35 @@ export function MorphShape({ mode, area, flatZ }: MorphShapeProps) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     <a.group position={position} rotation={rotation as any} scale={scale}>
       {/* SQUARE */}
-      <a.group scale={scaleFromOpacity(squareOpacity)}>
+      <a.group scale={scaleFromOpacity(squareOpacity)} onClick={() => console.log(area.number)}>
         <mesh>
           <boxGeometry args={[1, 1, 1]} />
           <a.meshStandardMaterial color={color} transparent opacity={squareOpacity} />
-          <Edges color="black" />
+          <Edges color="#020618" />
         </mesh>
       </a.group>
 
       {/* BALL */}
-      <a.group scale={scaleFromOpacity(ballOpacity)}>
+      <a.group scale={scaleFromOpacity(ballOpacity)} onClick={() => console.log(area.number)}>
         <mesh>
           <sphereGeometry args={[0.5, 32, 32]} />
           <a.meshStandardMaterial color={color} transparent opacity={ballOpacity} />
-          <Edges color="black" />
         </mesh>
       </a.group>
 
       {/* PIZZA */}
-      <a.group scale={scaleFromOpacity(pizzaOpacity)}>
+      <a.group scale={scaleFromOpacity(pizzaOpacity)} onClick={() => console.log(area.number)}>
         <mesh>
           <primitive object={pizzaGeometry} />
           <a.meshStandardMaterial color={color} transparent opacity={pizzaOpacity} />
-          <Edges color="black" />
+          <Edges color="#020618" />
         </mesh>
       </a.group>
 
       {/* label */}
       <group position={[0, 0, 0.51]}>
-        <Text fontSize={0.3} color="#FFFFFF" anchorX="center" anchorY="middle" outlineWidth={0.01} outlineColor="white">
-          {area.number}
+        <Text fontSize={0.3} color="#FFFFFF" anchorX="center" anchorY="middle" outlineWidth={content.key != "sign" ? 0.005 : 0} outlineColor="white">
+          {text}
         </Text>
       </group>
     </a.group>
